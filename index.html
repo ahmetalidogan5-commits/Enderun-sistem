@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emek Enderun - Günlük Program</title>
+    <link rel="icon" type="image/png" href="https://r.resimlink.com/XMru4hv.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --bg-color: #f4f4f6;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --accent: #95a5a6;
+            --highlight: #e74c3c;
+            --border-radius: 16px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #e6e9f0 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container { width: 100%; max-width: 600px; padding: 40px 20px; text-align: center; }
+
+        .profile-section { position: relative; width: 150px; height: 150px; margin: 0 auto 30px; cursor: pointer; }
+        .profile-img {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 4px solid white; box-shadow: var(--shadow);
+            transition: transform 0.3s ease, filter 0.3s ease; background-color: #ddd;
+        }
+        .profile-section:hover .profile-img { transform: scale(1.05); filter: brightness(0.8); }
+        .upload-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s ease;
+            pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .profile-section:hover .upload-overlay { opacity: 1; }
+        #fileInput { display: none; }
+
+        h1 {
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; letter-spacing: 2px;
+            margin-bottom: 10px; color: var(--text-main); text-transform: uppercase;
+        }
+        .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 40px; letter-spacing: 1px; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .btn {
+            background: white; color: var(--text-main); border: 2px solid var(--accent);
+            padding: 15px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 50px;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: 250px;
+        }
+        .btn:hover {
+            background: var(--text-main); color: white; border-color: var(--text-main);
+            transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh;
+            background: var(--bg-color); z-index: 100; transform: translateY(100%);
+            transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .screen.active { transform: translateY(0); }
+
+        .screen-content {
+            width: 100%; padding: 20px; padding-bottom: 100px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header-bar {
+            width: 100%; max-width: 1000px; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ddd;
+            position: sticky; top: 0; background: var(--bg-color); z-index: 10; padding-top: 10px;
+        }
+
+        .back-btn {
+            background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px;
+            font-size: 0.9rem; color: var(--text-main); font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .back-btn:hover { background: var(--text-main); color: white; }
+
+        .live-clock {
+            font-size: 1.1rem; font-weight: 700; color: var(--text-main);
+            background: white; padding: 5px 15px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .table-container {
+            width: 100%; max-width: 1000px; background: white;
+            border-radius: var(--border-radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th {
+            background: #f8f9fa; color: var(--text-muted); font-weight: 600; padding: 12px 8px;
+            text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 2px solid #eee;
+        }
+        td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; transition: background 0.3s; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #fafafa; }
+
+        tr.active-row {
+            background-color: #e8f4f8 !important; border-left: 4px solid #3498db;
+            font-weight: 600; color: #2980b9;
+        }
+        tr.active-row td { border-bottom: 1px solid #d4e6f1; }
+        .highlight-text { color: var(--highlight); font-weight: 700; }
+        .bold-text { font-weight: 700; }
+        .group-header { background: #ecf0f1; font-weight: 700; text-align: center; padding: 10px; border-bottom: 2px solid #bdc3c7; }
+
+        .list-item { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 1.1rem; font-weight: 500; text-align: center; }
+        .list-item:last-child { border-bottom: none; }
+
+        .footer-role {
+            margin-top: 0; padding: 15px; background: #2c3e50; color: white;
+            text-align: center; font-weight: 700; border-radius: 8px;
+            width: 100%; max-width: 1000px; margin-bottom: 20px;
+        }
+
+        .split-table { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; max-width: 1000px; }
+        .split-container { flex: 1; min-width: 300px; background: white; border-radius: var(--border-radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+        .split-title { background: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: 700; letter-spacing: 1px; }
+
+        .version-badge {
+            position: fixed; bottom: 12px; left: 12px; z-index: 300;
+            background: rgba(44, 62, 80, 0.85); color: #fff;
+            font-size: 0.7rem; font-weight: 600; letter-spacing: 1px;
+            padding: 5px 12px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .profile-section { width: 120px; height: 120px; }
+            td, th { padding: 8px 4px; font-size: 0.8rem; }
+            .btn { width: 100%; max-width: 300px; }
+            .split-table { flex-direction: column; }
+            .screen-content { padding: 15px; padding-bottom: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="homeScreen">
+        <div class="profile-section" onclick="document.getElementById('fileInput').click()">
+            <img src="https://r.resimlink.com/XMru4hv.png" alt="Profil" class="profile-img" id="profileImage">
+            <div class="upload-overlay">Değiştir</div>
+            <input type="file" id="fileInput" accept="image/*" onchange="loadFile(event)">
+        </div>
+
+        <h1>EMEK ENDERUN</h1>
+        <p class="subtitle">2026-2027</p>
+
+        <div class="btn-group">
+            <button class="btn" onclick="openScreen('programScreen')">Günlük Program</button>
+            <button class="btn" onclick="openScreen('yemekScreen')">Yemekçilik Listesi</button>
+            <button class="btn" onclick="openScreen('cayScreen')">Çaycılar Listesi</button>
+            <button class="btn" onclick="openScreen('kiraatScreen')">İmam - Müezzin</button>
+            <button class="btn" onclick="openScreen('temizlikScreen')">Temizlik Listesi</button>
+        </div>
+    </div>
+
+    <div class="screen" id="programScreen">
+        <div class="screen-content">
+            <div class="header-bar">
+                <button class="back-btn" onclick="closeScreen('programScreen')">← Geri Dön</button>
+                <div class="live-clock" id="clock1">00:00:00</div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>BAŞLAMA</th><th>BİTİŞ</th><th>PROGRAM</th></tr></thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen" id="yemekScreen">
+        <div class="screen-content">
+            <div class="header-bar">
+                <button class="back-btn" onclick="closeScreen('yemekScreen')">← Geri Dön</button>
+                <h2 style="font-size: 1.1rem; color: var(--text-main);">26-27 Yemekçilik</h2>
+            </div>
+            <div class="table-container"><table id="yemekTable"></table></div>
+        </div>
+    </div>
+
+    <div class="screen" id="cayScreen">
+        <div class="screen-content">
+            <div class="header-bar">
+                <button class="back-btn" onclick="closeScreen('cayScreen')">← Geri Dön</button>
+                <h2 style="font-size: 1.1rem; color: var(--text-main);">Çaycılar Listesi</h2>
+            </div>
+            <div class="table-container"><div id="cayList"></div></div>
+            <div class="footer-role">BAŞKAN: ABDULKADİR DÜZGÜN</div>
+        </div>
+    </div>
+
+    <div class="screen" id="kiraatScreen">
+        <div class="screen-content">
+            <div class="header-bar">
+                <button class="back-btn" onclick="closeScreen('kiraatScreen')">← Geri Dön</button>
+                <h2 style="font-size: 1.1rem; color: var(--text-main);">Kıraat Takip</h2>
+            </div>
+            <div class="split-table">
+                <div class="split-container">
+                    <div class="split-title">İMAM</div>
+                    <table><thead><tr><th>SIRA</th><th>ADI SOYADI</th><th>SINIFI</th></tr></thead><tbody id="imamBody"></tbody></table>
+                </div>
+                <div class="split-container">
+                    <div class="split-title">MÜEZZİN</div>
+                    <table><thead><tr><th>SIRA</th><th>ADI SOYADI</th><th>SINIFI</th></tr></thead><tbody id="muezzinBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen" id="temizlikScreen">
+        <div class="screen-content">
+            <div class="header-bar">
+                <button class="back-btn" onclick="closeScreen('temizlikScreen')">← Geri Dön</button>
+                <h2 style="font-size: 1.1rem; color: var(--text-main);">Temizlik Listesi</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>TEMİZLİK YERİ</th><th>TEMİZLEYEN ADI SOYADI</th><th>SINIFI</th><th>KAT MESULÜ</th></tr></thead>
+                    <tbody id="temizlikBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="version-badge">v2.0</div>
+        <script>
+        const scheduleData = [
+            { start: "04:45", end: "05:00", title: "KALKIŞ VE NAMAZA HAZIRLIK", type: "normal" },
+            { start: "05:00", end: "05:15", title: "SABAH NAMAZI", type: "bold" },
+            { start: "05:15", end: "05:30", title: "HATİM", type: "normal" },
+            { start: "05:30", end: "06:00", title: "VAZİFE", type: "normal" },
+            { start: "06:00", end: "08:00", title: "İSTİRAHAT", type: "normal" },
+            { start: "08:00", end: "08:30", title: "KAHVALTI", type: "normal" },
+            { start: "08:30", end: "08:50", title: "TEMİZLİK", type: "normal" },
+            { start: "08:50", end: "09:00", title: "DAHİLİ DERSE HAZIRLIK", type: "normal" },
+            { start: "09:00", end: "09:50", title: "1. DAHİLİ DERS", type: "highlight" },
+            { start: "09:50", end: "10:00", title: "TENEFÜS", type: "normal" },
+            { start: "10:00", end: "10:50", title: "2. DAHİLİ DERS", type: "highlight" },
+            { start: "10:50", end: "11:00", title: "TENEFÜS", type: "normal" },
+            { start: "11:00", end: "11:40", title: "OKUL DERSİ 1", type: "normal" },
+            { start: "11:40", end: "11:50", title: "TENEFÜS", type: "normal" },
+            { start: "11:50", end: "12:30", title: "OKUL DERSİ 2", type: "highlight" },
+            { start: "12:30", end: "12:40", title: "TENEFÜS", type: "normal" },
+            { start: "12:40", end: "13:20", title: "OKUL DERSİ 3", type: "highlight" },
+            { start: "13:20", end: "13:45", title: "ARA VE ÖĞLE NAMAZI", type: "bold" },
+            { start: "13:45", end: "14:30", title: "ÖĞLE YEMEĞİ", type: "normal" },
+            { start: "14:30", end: "15:10", title: "OKUL DERSİ 4", type: "normal" },
+            { start: "15:10", end: "15:20", title: "TENEFÜS", type: "bold" },
+            { start: "15:20", end: "16:00", title: "OKUL DERSİ 5", type: "highlight" },
+            { start: "16:00", end: "16:10", title: "TENEFÜS", type: "normal" },
+            { start: "16:10", end: "16:50", title: "OKUL DERSİ 6", type: "bold" },
+            { start: "16:50", end: "17:00", title: "TENEFÜS", type: "normal" },
+            { start: "17:00", end: "17:40", title: "OKUL DERSİ 7", type: "bold" },
+            { start: "17:40", end: "18:00", title: "ARA VE İKİNDİ NAMAZI", type: "normal" },
+            { start: "18:00", end: "18:40", title: "ETÜT 1", type: "normal" },
+            { start: "18:40", end: "19:20", title: "ETÜT 2", type: "normal" },
+            { start: "19:20", end: "20:00", title: "AKŞAM YEMEĞİ", type: "normal" },
+            { start: "20:00", end: "20:50", title: "ETKİNLİK 1", type: "normal" },
+            { start: "20:50", end: "21:00", title: "TENEFÜS", type: "normal" },
+            { start: "21:00", end: "21:15", title: "AKŞAM NAMAZI", type: "normal" },
+            { start: "21:15", end: "22:15", title: "ETKİNLİK 2", type: "normal" },
+            { start: "22:15", end: "22:30", title: "YATSI NAMAZI", type: "bold" },
+            { start: "23:00", end: "00:00", title: "MECBURİ İSTİRAHAT", type: "bold" }
+        ];
+
+        const yemekData = [
+            { group: "1.GRUP", members: ["ALİHAN ÖZEN", "MEMHET EMRE ÜLKER", "MEHMET HAMZA EREN"] },
+            { group: "2.GRUP", members: ["AHMET YASİN ŞAHİN", "OSMAN KENAN ÇİMENDAĞ", "HİLMİHAN KIRBIYIK"] },
+            { group: "3.GRUP", members: ["AHMET FURKAN BALARBAN", "AHMET SELİM ERDEM", "YUSUF KEMAL YETİM"] },
+            { group: "4.GRUP", members: ["İSMAİL ÇOMAK", "EYMEN AKİF UYAR", "MUHİTTİN KILIÇ"] },
+            { group: "5.GRUP", members: ["HİLMİ ENES BAYRAM", "MUHAMMED ENES KINCAK", "MUSTAFA EMİR BEKİ"] },
+            { group: "6.GRUP", members: ["MEHMET EMRE OKYAY", "MEHMET TURAN", "YUSUF KEREM ERTAŞ"] },
+            { group: "7.GRUP", members: ["MUHAMMED ENSAR AYDIN", "AHMET BEDİRHAN ÖZCAN", "AHMET ENES KURU"] },
+            { group: "8.GRUP", members: ["AHMET KEREM BAYRAKTAR", "ARİFHAN İNAN", "KEREM YAVUZ YILMAZ"] },
+            { group: "9.GRUP", members: ["ÖMER FARUK CAMBAZ", "YUSUF GÜLCAN", "MEHMET AKİF ÇAKIR"] },
+            { group: "10.GRUP", members: ["İLHAN AHMET ÇAYIR", "TEVFİK TUNA ÇAKMAK", "MEHMET HİLMİ ÇELEN"] },
+            { group: "11.GRUP", members: ["ÖMER YAĞIZ EMSEN", "HÜSEYİN EMİR AKKOÇ", "SENCER ÇELİKKANAT"] },
+            { group: "12.GRUP", members: ["YUNUS KEREM ÖZDEMİR", "MEHMET YILMAZ", "MEHMET ENES İNAN"] },
+            { group: "13.GRUP", members: ["BEHLÜL EDİP ÇAKIR", "OSMAN YEŞİLIRMAK", "AHMET FATİH ÖLMEZ"] },
+            { group: "14.GRUP", members: ["MEHMET SELİM DEMİRCİ", "İBRAHİM YAĞIZ YİĞEN", "EMİN KEREM AKÇAY"] }
+        ];
+
+        const rolesData = [
+            { role: "BAŞKAN", name: "MEHMET BUĞRAHAN BİNGÖL" },
+            { role: "BAŞKAN YARDIMCISI", name: "MUHAMMED ENES KINCAK" },
+            { role: "EKMEKÇİ", name: "FARUK SELİM ATACAN" },
+            { role: "SERVİSÇİ", name: "KEREM TALHA YILDIRIM" }
+        ];
+
+        const cayData = [
+            "AHMET SELİM ERDEM", "AHMET FURKAN BALARBAN", "HİLMİHAN KIRBIYIK", "İSMAİL ÇOMAK",
+            "MEHMET TURAN", "MEHMET HAMZA EREN", "OSMAN KENAN ÇİMENDAĞ", "ABDULKADİR DÜZGÜN"
+        ];
+
+        const imamData = [
+            { sira: 1, name: "SENCER ÇELİKKANAT", sinif: "11" }, { sira: 2, name: "AHMET FATİH ÖLMEZ", sinif: "12" },
+            { sira: 3, name: "EMİN KEREM AKÇAY", sinif: "12" }, { sira: 4, name: "İBRAHİM YAĞIZ YİĞEN", sinif: "12" },
+            { sira: 5, name: "MEHMET ENES İNAN", sinif: "12" }, { sira: 6, name: "MEHMET SELİM DEMİRCİ", sinif: "12" },
+            { sira: 7, name: "MEHMET YILMAZ", sinif: "12" }, { sira: 8, name: "ÖMER YAĞIZ EMSEN", sinif: "12" },
+            { sira: 9, name: "YUNUS KEREM ÖZDEMİR", sinif: "12" }, { sira: 10, name: "ABDULKADİR DÜZGÜN", sinif: "11" },
+            { sira: 11, name: "AHMET BEDİRHAN ÖZCAN", sinif: "11" }, { sira: 12, name: "AHMET ENES KURU", sinif: "11" },
+            { sira: 13, name: "AHMET KEREM BAYRAKTAR", sinif: "11" }, { sira: 14, name: "ARİFHAN İNAN", sinif: "11" },
+            { sira: 15, name: "HÜSEYİN EMİR AKKOÇ", sinif: "11" }, { sira: 16, name: "İHSAN BEDİR ŞENOL", sinif: "11" },
+            { sira: 17, name: "İLHAN AHMET ÇAYIR", sinif: "11" }, { sira: 18, name: "KEREM TALHA YILDIRIM", sinif: "11" },
+            { sira: 19, name: "KEREM YAVUZ YILMAZ", sinif: "11" }, { sira: 20, name: "MEHMET AKİF ÇAKIR", sinif: "11" },
+            { sira: 21, name: "MEHMET HİLMİ ÇELEN", sinif: "11" }, { sira: 22, name: "MUHAMMED ENSAR AYDIN", sinif: "11" },
+            { sira: 23, name: "SENCER ÇELİKKANAT", sinif: "11" }, { sira: 24, name: "TEVFİK TUNA ÇAKMAK", sinif: "11" },
+            { sira: 25, name: "YUSUF GÜLCAN", sinif: "11" }, { sira: 26, name: "AHMET SELİM ERDEM", sinif: "10" },
+            { sira: 27, name: "EMİN AKİF UYAR", sinif: "10" }, { sira: 28, name: "HİLMİ ENES BAYRAM", sinif: "10" }
+        ];
+
+        const muezzinData = [
+            { sira: 1, name: "ALİHAN ÖZEN", sinif: "9" }, { sira: 2, name: "AHMET FURKAN BALARBAN", sinif: "10" },
+            { sira: 3, name: "AHMET SELİM ERDEM", sinif: "10" }, { sira: 4, name: "EMİN AKİF UYAR", sinif: "10" },
+            { sira: 5, name: "FARUK SELİM ATACAN", sinif: "10" }, { sira: 6, name: "HİLMİ ENES BAYRAM", sinif: "10" },
+            { sira: 7, name: "HİLMİHAN KIRBIYIK", sinif: "10" }, { sira: 8, name: "MEHMET EMRE OKYAY", sinif: "10" },
+            { sira: 9, name: "MUHAMMED ENES KINCAK", sinif: "10" }, { sira: 10, name: "MUHİTTİN KILIÇ", sinif: "10" },
+            { sira: 11, name: "MUSTAFA EMİR BEKİ", sinif: "10" }, { sira: 12, name: "YUSUF KEMAL YETİM", sinif: "10" },
+            { sira: 13, name: "YUSUF KEREM ERTAŞ", sinif: "10" }, { sira: 14, name: "YUSUF GÜLCAN", sinif: "11" },
+            { sira: 15, name: "TEVFİK TUNA ÇAKMAK", sinif: "11" }, { sira: 16, name: "SENCER ÇELİKKANAT", sinif: "11" },
+            { sira: 17, name: "MUHAMMED ENSAR AYDIN", sinif: "11" }, { sira: 18, name: "MEHMET HİLMİ ÇELEN", sinif: "11" },
+            { sira: 19, name: "MEHMET AKİF ÇAKIR", sinif: "11" }, { sira: 20, name: "KEREM YAVUZ YILMAZ", sinif: "11" },
+            { sira: 21, name: "KEREM TALHA YILDIRIM", sinif: "11" }, { sira: 22, name: "İLHAN AHMET ÇAYIR", sinif: "11" },
+            { sira: 23, name: "İHSAN BEDİR ŞENOL", sinif: "11" }, { sira: 24, name: "HÜSEYİN EMİR AKKOÇ", sinif: "11" },
+            { sira: 25, name: "ARİFHAN İNAN", sinif: "11" }, { sira: 26, name: "AHMET KEREM BAYRAKTAR", sinif: "11" },
+            { sira: 27, name: "AHMET ENES KURU", sinif: "11" }, { sira: 28, name: "AHMET BEDİRHAN ÖZCAN", sinif: "11" }
+        ];
+
+        const temizlikData = [
+            { kat: "ZEMİN KAT", rows: [
+                ["SPOR SALONU", "MUHAMMED ENSAR AYDIN", "11", "TİMUR ASİMOV"],
+                ["MERDİVEN ALTI", "MUHAMMED ENES KINCAK", "10", "TİMUR ASİMOV"],
+                ["DEPO", "MUHAMMED ENES KINCAK", "10", "TİMUR ASİMOV"],
+                ["GİRİŞ AYAKKABILIK VE MÜRACAAT", "YUSUF GÜLCAN", "11", "YASİN AKGÖZ"],
+                ["CAMLI ODA", "EYMEN AKİF UYAR", "10", "YASİN AKGÖZ"],
+                ["SALON", "FARUK SELİM ATACAN", "9", "YASİN AKGÖZ"],
+                ["GİRİŞ LAVABO", "TEVFİK TUNA ÇAKMAK", "11", "YASİN AKGÖZ"],
+                ["YEMEKHANE", "MEHMET BUĞRAHAN BİNGÖL", "10", "YASİN AKGÖZ"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "YASİN AKGÖZ"]
+            ]},
+            { kat: "1.KAT", rows: [
+                ["1.KAT MÜDÜRİYET", "AHMET FURKAN BALARBAN", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["TOPLANTI ODASI", "AHMET FURKAN BALARBAN", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["ZİYARETÇİ ODASI", "AHMET SELİM ERDEM", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["Y.MESUL ODASI", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["HUSUSİ ODA", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["TUVALETLER", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["HOL", "MEHMET AKİF ÇAKIR", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["ÇAYHANE", "İSMAİL ÇOMAK", "10", "AHMET HİLMİ KADIOĞLU"]
+            ]},
+            { kat: "2.KAT", rows: [
+                ["2. KAT TUVALETLER", "MEHMET ENES İNAN", "12", "EMRULLAH MENTEŞE"],
+                ["TM ETÜT", "OSMAN KENAN ÇİMENDAĞ", "12", "EMRULLAH MENTEŞE"],
+                ["SAYISAL ETÜT", "OSMAN YEŞİLIRMAK", "12", "EMRULLAH MENTEŞE"],
+                ["PERSONEL ODASI", "MEHMET SELİM DEMİRCİ", "12", "EMRULLAH MENTEŞE"],
+                ["MESCİT", "EMİN KEREM AKÇAY", "12", "EMRULLAH MENTEŞE"],
+                ["HOL", "İBRAHİM YAĞIZ YİĞEN", "12", "EMRULLAH MENTEŞE"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "EMRULLAH MENTEŞE"]
+            ]},
+            { kat: "3.KAT", rows: [
+                ["3. KAT 9. SINIF ETÜT", "ALİHAN ÖZEN", "9", "OĞUZHAN TUNA"],
+                ["10. SINIF ETÜT", "MUHİTTİN KILIÇ", "10", "OĞUZHAN TUNA"],
+                ["11. TM ETÜT", "ARİFHAN İNAN", "11", "OĞUZHAN TUNA"],
+                ["11. SAYISAL ETÜT", "ARİFHAN İNAN", "11", "OĞUZHAN TUNA"],
+                ["HOL", "HÜSEYİN EMİR AKKOÇ", "11", "OĞUZHAN TUNA"],
+                ["TUVALETLER", "YUSUF KEREM ERTAŞ", "10", "OĞUZHAN TUNA"],
+                ["BİLGİ İŞLEM", "İHSAN BEDİR ŞENOL", "11", "OĞUZHAN TUNA"],
+                ["TALEBE GÖRÜŞME ODASI", "MUHİTTİN KILIÇ", "10", "OĞUZHAN TUNA"],
+                ["ÖĞRETMENLER ODASI", "İHSAN BEDİR ŞENOL", "11", "OĞUZHAN TUNA"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "OĞUZHAN TUNA"]
+            ]},
+            { kat: "4.KAT", rows: [
+                ["4.KAT YATAKHANE", "YUNUS KEREM ÖZDEMİR", "12", "HAKAN KOCAARİ"],
+                ["YATAKHANE", "YUNUS KEREM ÖZDEMİR", "12", "HAKAN KOCAARİ"],
+                ["REVİR", "MEHMET YILMAZ", "12", "HAKAN KOCAARİ"],
+                ["NÖB. PER. ODASI", "MEHMET YILMAZ", "12", "HAKAN KOCAARİ"],
+                ["HOL", "AHMET FATİH ÖLMEZ", "12", "HAKAN KOCAARİ"],
+                ["BANYOLAR", "BEHLÜL EDİP ÇAKIR", "12", "HAKAN KOCAARİ"],
+                ["TUVALETLER", "MEHMET ENES İNAN", "12", "HAKAN KOCAARİ"],
+                ["MERDİVEN", "AHMET FATİH ÖLMEZ", "12", "HAKAN KOCAARİ"]
+            ]},
+            { kat: "5.KAT", rows: [
+                ["5. KAT 9. SINIF YATAKHANE", "MEHMET EMRE ÜLKER", "9", "ERCAN GÜRÜLTÜOĞLU"],
+                ["10. SINIF YATAKHANE", "HİLMİ ENES BAYRAM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["10. YATAKHANE", "HİLMİ ENES BAYRAM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["11. SINIF YATAKHANE", "SENCER ÇELİKKANAT", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["11. SINIF YATAKHANE", "SENCER ÇELİKKANAT", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["HOL", "AHMET BEDİRHAN ÖZCAN", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["TUVALETLER", "AHMET KEREM BAYRAKTAR, AHMET ENES KURU", "11-11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["KURUTMALIK", "YUSUF KEMAL YETİM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["MERDİVEN", "YUSUF KEMAL YETİM", "10", "ERCAN GÜRÜLTÜOĞLU"]
+            ]},
+            { kat: "6.KAT", rows: [
+                ["6. KAT LOKAL", "MEHMET EMRE OKYAY", "10", "AHMET ALİHAN DOĞAN"],
+                ["BİLGİSAYAR ODASI", "KEREM TALHA YILDIRIM", "11", "AHMET ALİHAN DOĞAN"],
+                ["KÜTÜPHANE", "MEHMET HAMZA EREN", "9", "AHMET ALİHAN DOĞAN"],
+                ["HOL", "MEHMET HAMZA EREN", "9", "AHMET ALİHAN DOĞAN"],
+                ["KANTİN", "MUSTAFA EMİR BEKİ", "10", "AHMET ALİHAN DOĞAN"]
+            ]}
+        ];
+
+        function renderSchedule() {
+            const tbody = document.getElementById('scheduleBody'); tbody.innerHTML = '';
+            const now = new Date(); const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            scheduleData.forEach((item) => {
+                const row = document.createElement('tr');
+                const [startH, startM] = item.start.split(':').map(Number);
+                const [endH, endM] = item.end.split(':').map(Number);
+                let startTotal = startH * 60 + startM; let endTotal = endH * 60 + endM;
+                if (endTotal < startTotal) endTotal += 24 * 60;
+                let checkCurrent = currentMinutes;
+                if (checkCurrent < startTotal && item.title === "MECBURİ İSTİRAHAT") checkCurrent += 24 * 60;
+                if (checkCurrent >= startTotal && checkCurrent < endTotal) row.classList.add('active-row');
+                let titleClass = item.type === 'highlight' ? 'highlight-text' : (item.type === 'bold' ? 'bold-text' : '');
+                row.innerHTML = `<td>${item.start}</td><td>${item.end}</td><td class="${titleClass}">${item.title}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderYemek() {
+            const table = document.getElementById('yemekTable');
+            let html = '<thead><tr><th colspan="3">GRUPLAR</th></tr><tr><th>1.Kişi</th><th>2.Kişi</th><th>3.Kişi</th></tr></thead><tbody>';
+            yemekData.forEach(g => {
+                html += `<tr><td colspan="3" class="group-header">${g.group}</td></tr><tr><td>${g.members[0]}</td><td>${g.members[1]}</td><td>${g.members[2]}</td></tr>`;
+            });
+            html += `<tr><td colspan="3" class="group-header" style="margin-top:20px;">GÖREVLİLER</td></tr><tr><th>Görev</th><th colspan="2">İsim</th></tr>`;
+            rolesData.forEach(r => { html += `<tr><td class="bold-text">${r.role}</td><td colspan="2">${r.name}</td></tr>`; });
+            table.innerHTML = html + '</tbody>';
+        }
+
+        function renderCay() {
+            const list = document.getElementById('cayList'); let html = '';
+            cayData.forEach(name => { html += `<div class="list-item">${name}</div>`; });
+            list.innerHTML = html;
+        }
+
+        function renderKiraat() {
+            document.getElementById('imamBody').innerHTML = imamData.map(i => `<tr><td>${i.sira}</td><td>${i.name}</td><td>${i.sinif}</td></tr>`).join('');
+            document.getElementById('muezzinBody').innerHTML = muezzinData.map(m => `<tr><td>${m.sira}</td><td>${m.name}</td><td>${m.sinif}</td></tr>`).join('');
+        }
+
+        function renderTemizlik() {
+            const tbody = document.getElementById('temizlikBody');
+            let html = '';
+            temizlikData.forEach(k => {
+                html += `<tr><td colspan="4" class="group-header">${k.kat}</td></tr>`;
+                k.rows.forEach(r => {
+                    html += `<tr><td class="bold-text" style="text-align:left; padding-left:10px;">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="bold-text">${r[3]}</td></tr>`;
+                });
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateClock() {
+            document.getElementById('clock1').textContent = new Date().toLocaleTimeString('tr-TR');
+            if (new Date().getSeconds() === 0) renderSchedule();
+        }
+
+        function loadFile(event) {
+            const image = document.getElementById('profileImage');
+            image.src = URL.createObjectURL(event.target.files[0]);
+            const reader = new FileReader();
+            reader.onload = (e) => localStorage.setItem('enderunProfilePic', e.target.result);
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function openScreen(id) {
+            document.getElementById(id).classList.add('active');
+            document.getElementById(id).scrollTop = 0;
+            if(id === 'programScreen') renderSchedule();
+            if(id === 'yemekScreen') renderYemek();
+            if(id === 'cayScreen') renderCay();
+            if(id === 'kiraatScreen') renderKiraat();
+            if(id === 'temizlikScreen') renderTemizlik();
+        }
+
+        function closeScreen(id) { document.getElementById(id).classList.remove('active'); }
+
+        window.onload = () => {
+            const savedPic = localStorage.getItem('enderunProfilePic');
+            if (savedPic) document.getElementById('profileImage').src = savedPic;
+            renderSchedule();
+            renderTemizlik();
+            setInterval(updateClock, 1000);
+            updateClock();
+        };
+    </script>
+</body>
+</html>
+    <script>
+        const scheduleData = [
+            { start: "04:45", end: "05:00", title: "KALKIŞ VE NAMAZA HAZIRLIK", type: "normal" },
+            { start: "05:00", end: "05:15", title: "SABAH NAMAZI", type: "bold" },
+            { start: "05:15", end: "05:30", title: "HATİM", type: "normal" },
+            { start: "05:30", end: "06:00", title: "VAZİFE", type: "normal" },
+            { start: "06:00", end: "08:00", title: "İSTİRAHAT", type: "normal" },
+            { start: "08:00", end: "08:30", title: "KAHVALTI", type: "normal" },
+            { start: "08:30", end: "08:50", title: "TEMİZLİK", type: "normal" },
+            { start: "08:50", end: "09:00", title: "DAHİLİ DERSE HAZIRLIK", type: "normal" },
+            { start: "09:00", end: "09:50", title: "1. DAHİLİ DERS", type: "highlight" },
+            { start: "09:50", end: "10:00", title: "TENEFÜS", type: "normal" },
+            { start: "10:00", end: "10:50", title: "2. DAHİLİ DERS", type: "highlight" },
+            { start: "10:50", end: "11:00", title: "TENEFÜS", type: "normal" },
+            { start: "11:00", end: "11:40", title: "OKUL DERSİ 1", type: "normal" },
+            { start: "11:40", end: "11:50", title: "TENEFÜS", type: "normal" },
+            { start: "11:50", end: "12:30", title: "OKUL DERSİ 2", type: "highlight" },
+            { start: "12:30", end: "12:40", title: "TENEFÜS", type: "normal" },
+            { start: "12:40", end: "13:20", title: "OKUL DERSİ 3", type: "highlight" },
+            { start: "13:20", end: "13:45", title: "ARA VE ÖĞLE NAMAZI", type: "bold" },
+            { start: "13:45", end: "14:30", title: "ÖĞLE YEMEĞİ", type: "normal" },
+            { start: "14:30", end: "15:10", title: "OKUL DERSİ 4", type: "normal" },
+            { start: "15:10", end: "15:20", title: "TENEFÜS", type: "bold" },
+            { start: "15:20", end: "16:00", title: "OKUL DERSİ 5", type: "highlight" },
+            { start: "16:00", end: "16:10", title: "TENEFÜS", type: "normal" },
+            { start: "16:10", end: "16:50", title: "OKUL DERSİ 6", type: "bold" },
+            { start: "16:50", end: "17:00", title: "TENEFÜS", type: "normal" },
+            { start: "17:00", end: "17:40", title: "OKUL DERSİ 7", type: "bold" },
+            { start: "17:40", end: "18:00", title: "ARA VE İKİNDİ NAMAZI", type: "normal" },
+            { start: "18:00", end: "18:40", title: "ETÜT 1", type: "normal" },
+            { start: "18:40", end: "19:20", title: "ETÜT 2", type: "normal" },
+            { start: "19:20", end: "20:00", title: "AKŞAM YEMEĞİ", type: "normal" },
+            { start: "20:00", end: "20:50", title: "ETKİNLİK 1", type: "normal" },
+            { start: "20:50", end: "21:00", title: "TENEFÜS", type: "normal" },
+            { start: "21:00", end: "21:15", title: "AKŞAM NAMAZI", type: "normal" },
+            { start: "21:15", end: "22:15", title: "ETKİNLİK 2", type: "normal" },
+            { start: "22:15", end: "22:30", title: "YATSI NAMAZI", type: "bold" },
+            { start: "23:00", end: "00:00", title: "MECBURİ İSTİRAHAT", type: "bold" }
+        ];
+
+        const yemekData = [
+            { group: "1.GRUP", members: ["ALİHAN ÖZEN", "MEMHET EMRE ÜLKER", "MEHMET HAMZA EREN"] },
+            { group: "2.GRUP", members: ["AHMET YASİN ŞAHİN", "OSMAN KENAN ÇİMENDAĞ", "HİLMİHAN KIRBIYIK"] },
+            { group: "3.GRUP", members: ["AHMET FURKAN BALARBAN", "AHMET SELİM ERDEM", "YUSUF KEMAL YETİM"] },
+            { group: "4.GRUP", members: ["İSMAİL ÇOMAK", "EYMEN AKİF UYAR", "MUHİTTİN KILIÇ"] },
+            { group: "5.GRUP", members: ["HİLMİ ENES BAYRAM", "MUHAMMED ENES KINCAK", "MUSTAFA EMİR BEKİ"] },
+            { group: "6.GRUP", members: ["MEHMET EMRE OKYAY", "MEHMET TURAN", "YUSUF KEREM ERTAŞ"] },
+            { group: "7.GRUP", members: ["MUHAMMED ENSAR AYDIN", "AHMET BEDİRHAN ÖZCAN", "AHMET ENES KURU"] },
+            { group: "8.GRUP", members: ["AHMET KEREM BAYRAKTAR", "ARİFHAN İNAN", "KEREM YAVUZ YILMAZ"] },
+            { group: "9.GRUP", members: ["ÖMER FARUK CAMBAZ", "YUSUF GÜLCAN", "MEHMET AKİF ÇAKIR"] },
+            { group: "10.GRUP", members: ["İLHAN AHMET ÇAYIR", "TEVFİK TUNA ÇAKMAK", "MEHMET HİLMİ ÇELEN"] },
+            { group: "11.GRUP", members: ["ÖMER YAĞIZ EMSEN", "HÜSEYİN EMİR AKKOÇ", "SENCER ÇELİKKANAT"] },
+            { group: "12.GRUP", members: ["YUNUS KEREM ÖZDEMİR", "MEHMET YILMAZ", "MEHMET ENES İNAN"] },
+            { group: "13.GRUP", members: ["BEHLÜL EDİP ÇAKIR", "OSMAN YEŞİLIRMAK", "AHMET FATİH ÖLMEZ"] },
+            { group: "14.GRUP", members: ["MEHMET SELİM DEMİRCİ", "İBRAHİM YAĞIZ YİĞEN", "EMİN KEREM AKÇAY"] }
+        ];
+
+        const rolesData = [
+            { role: "BAŞKAN", name: "MEHMET BUĞRAHAN BİNGÖL" },
+            { role: "BAŞKAN YARDIMCISI", name: "MUHAMMED ENES KINCAK" },
+            { role: "EKMEKÇİ", name: "FARUK SELİM ATACAN" },
+            { role: "SERVİSÇİ", name: "KEREM TALHA YILDIRIM" }
+        ];
+
+        const cayData = [
+            "AHMET SELİM ERDEM", "AHMET FURKAN BALARBAN", "HİLMİHAN KIRBIYIK", "İSMAİL ÇOMAK",
+            "MEHMET TURAN", "MEHMET HAMZA EREN", "OSMAN KENAN ÇİMENDAĞ", "ABDULKADİR DÜZGÜN"
+        ];
+
+        const imamData = [
+            { sira: 1, name: "SENCER ÇELİKKANAT", sinif: "11" }, { sira: 2, name: "AHMET FATİH ÖLMEZ", sinif: "12" },
+            { sira: 3, name: "EMİN KEREM AKÇAY", sinif: "12" }, { sira: 4, name: "İBRAHİM YAĞIZ YİĞEN", sinif: "12" },
+            { sira: 5, name: "MEHMET ENES İNAN", sinif: "12" }, { sira: 6, name: "MEHMET SELİM DEMİRCİ", sinif: "12" },
+            { sira: 7, name: "MEHMET YILMAZ", sinif: "12" }, { sira: 8, name: "ÖMER YAĞIZ EMSEN", sinif: "12" },
+            { sira: 9, name: "YUNUS KEREM ÖZDEMİR", sinif: "12" }, { sira: 10, name: "ABDULKADİR DÜZGÜN", sinif: "11" },
+            { sira: 11, name: "AHMET BEDİRHAN ÖZCAN", sinif: "11" }, { sira: 12, name: "AHMET ENES KURU", sinif: "11" },
+            { sira: 13, name: "AHMET KEREM BAYRAKTAR", sinif: "11" }, { sira: 14, name: "ARİFHAN İNAN", sinif: "11" },
+            { sira: 15, name: "HÜSEYİN EMİR AKKOÇ", sinif: "11" }, { sira: 16, name: "İHSAN BEDİR ŞENOL", sinif: "11" },
+            { sira: 17, name: "İLHAN AHMET ÇAYIR", sinif: "11" }, { sira: 18, name: "KEREM TALHA YILDIRIM", sinif: "11" },
+            { sira: 19, name: "KEREM YAVUZ YILMAZ", sinif: "11" }, { sira: 20, name: "MEHMET AKİF ÇAKIR", sinif: "11" },
+            { sira: 21, name: "MEHMET HİLMİ ÇELEN", sinif: "11" }, { sira: 22, name: "MUHAMMED ENSAR AYDIN", sinif: "11" },
+            { sira: 23, name: "SENCER ÇELİKKANAT", sinif: "11" }, { sira: 24, name: "TEVFİK TUNA ÇAKMAK", sinif: "11" },
+            { sira: 25, name: "YUSUF GÜLCAN", sinif: "11" }, { sira: 26, name: "AHMET SELİM ERDEM", sinif: "10" },
+            { sira: 27, name: "EMİN AKİF UYAR", sinif: "10" }, { sira: 28, name: "HİLMİ ENES BAYRAM", sinif: "10" }
+        ];
+
+        const muezzinData = [
+            { sira: 1, name: "ALİHAN ÖZEN", sinif: "9" }, { sira: 2, name: "AHMET FURKAN BALARBAN", sinif: "10" },
+            { sira: 3, name: "AHMET SELİM ERDEM", sinif: "10" }, { sira: 4, name: "EMİN AKİF UYAR", sinif: "10" },
+            { sira: 5, name: "FARUK SELİM ATACAN", sinif: "10" }, { sira: 6, name: "HİLMİ ENES BAYRAM", sinif: "10" },
+            { sira: 7, name: "HİLMİHAN KIRBIYIK", sinif: "10" }, { sira: 8, name: "MEHMET EMRE OKYAY", sinif: "10" },
+            { sira: 9, name: "MUHAMMED ENES KINCAK", sinif: "10" }, { sira: 10, name: "MUHİTTİN KILIÇ", sinif: "10" },
+            { sira: 11, name: "MUSTAFA EMİR BEKİ", sinif: "10" }, { sira: 12, name: "YUSUF KEMAL YETİM", sinif: "10" },
+            { sira: 13, name: "YUSUF KEREM ERTAŞ", sinif: "10" }, { sira: 14, name: "YUSUF GÜLCAN", sinif: "11" },
+            { sira: 15, name: "TEVFİK TUNA ÇAKMAK", sinif: "11" }, { sira: 16, name: "SENCER ÇELİKKANAT", sinif: "11" },
+            { sira: 17, name: "MUHAMMED ENSAR AYDIN", sinif: "11" }, { sira: 18, name: "MEHMET HİLMİ ÇELEN", sinif: "11" },
+            { sira: 19, name: "MEHMET AKİF ÇAKIR", sinif: "11" }, { sira: 20, name: "KEREM YAVUZ YILMAZ", sinif: "11" },
+            { sira: 21, name: "KEREM TALHA YILDIRIM", sinif: "11" }, { sira: 22, name: "İLHAN AHMET ÇAYIR", sinif: "11" },
+            { sira: 23, name: "İHSAN BEDİR ŞENOL", sinif: "11" }, { sira: 24, name: "HÜSEYİN EMİR AKKOÇ", sinif: "11" },
+            { sira: 25, name: "ARİFHAN İNAN", sinif: "11" }, { sira: 26, name: "AHMET KEREM BAYRAKTAR", sinif: "11" },
+            { sira: 27, name: "AHMET ENES KURU", sinif: "11" }, { sira: 28, name: "AHMET BEDİRHAN ÖZCAN", sinif: "11" }
+        ];
+
+        const temizlikData = [
+            { kat: "ZEMİN KAT", rows: [
+                ["SPOR SALONU", "MUHAMMED ENSAR AYDIN", "11", "TİMUR ASİMOV"],
+                ["MERDİVEN ALTI", "MUHAMMED ENES KINCAK", "10", "TİMUR ASİMOV"],
+                ["DEPO", "MUHAMMED ENES KINCAK", "10", "TİMUR ASİMOV"],
+                ["GİRİŞ AYAKKABILIK VE MÜRACAAT", "YUSUF GÜLCAN", "11", "YASİN AKGÖZ"],
+                ["CAMLI ODA", "EYMEN AKİF UYAR", "10", "YASİN AKGÖZ"],
+                ["SALON", "FARUK SELİM ATACAN", "9", "YASİN AKGÖZ"],
+                ["GİRİŞ LAVABO", "TEVFİK TUNA ÇAKMAK", "11", "YASİN AKGÖZ"],
+                ["YEMEKHANE", "MEHMET BUĞRAHAN BİNGÖL", "10", "YASİN AKGÖZ"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "YASİN AKGÖZ"]
+            ]},
+            { kat: "1.KAT", rows: [
+                ["1.KAT MÜDÜRİYET", "AHMET FURKAN BALARBAN", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["TOPLANTI ODASI", "AHMET FURKAN BALARBAN", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["ZİYARETÇİ ODASI", "AHMET SELİM ERDEM", "10", "AHMET HİLMİ KADIOĞLU"],
+                ["Y.MESUL ODASI", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["HUSUSİ ODA", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["TUVALETLER", "ABDULKADİR DÜZGÜN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["HOL", "MEHMET AKİF ÇAKIR", "11", "AHMET HİLMİ KADIOĞLU"],
+                ["ÇAYHANE", "İSMAİL ÇOMAK", "10", "AHMET HİLMİ KADIOĞLU"]
+            ]},
+            { kat: "2.KAT", rows: [
+                ["2. KAT TUVALETLER", "MEHMET ENES İNAN", "12", "EMRULLAH MENTEŞE"],
+                ["TM ETÜT", "OSMAN KENAN ÇİMENDAĞ", "12", "EMRULLAH MENTEŞE"],
+                ["SAYISAL ETÜT", "OSMAN YEŞİLIRMAK", "12", "EMRULLAH MENTEŞE"],
+                ["PERSONEL ODASI", "MEHMET SELİM DEMİRCİ", "12", "EMRULLAH MENTEŞE"],
+                ["MESCİT", "EMİN KEREM AKÇAY", "12", "EMRULLAH MENTEŞE"],
+                ["HOL", "İBRAHİM YAĞIZ YİĞEN", "12", "EMRULLAH MENTEŞE"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "EMRULLAH MENTEŞE"]
+            ]},
+            { kat: "3.KAT", rows: [
+                ["3. KAT 9. SINIF ETÜT", "ALİHAN ÖZEN", "9", "OĞUZHAN TUNA"],
+                ["10. SINIF ETÜT", "MUHİTTİN KILIÇ", "10", "OĞUZHAN TUNA"],
+                ["11. TM ETÜT", "ARİFHAN İNAN", "11", "OĞUZHAN TUNA"],
+                ["11. SAYISAL ETÜT", "ARİFHAN İNAN", "11", "OĞUZHAN TUNA"],
+                ["HOL", "HÜSEYİN EMİR AKKOÇ", "11", "OĞUZHAN TUNA"],
+                ["TUVALETLER", "YUSUF KEREM ERTAŞ", "10", "OĞUZHAN TUNA"],
+                ["BİLGİ İŞLEM", "İHSAN BEDİR ŞENOL", "11", "OĞUZHAN TUNA"],
+                ["TALEBE GÖRÜŞME ODASI", "MUHİTTİN KILIÇ", "10", "OĞUZHAN TUNA"],
+                ["ÖĞRETMENLER ODASI", "İHSAN BEDİR ŞENOL", "11", "OĞUZHAN TUNA"],
+                ["MERDİVEN", "YUSUF GÜLCAN", "11", "OĞUZHAN TUNA"]
+            ]},
+            { kat: "4.KAT", rows: [
+                ["4.KAT YATAKHANE", "YUNUS KEREM ÖZDEMİR", "12", "HAKAN KOCAARİ"],
+                ["YATAKHANE", "YUNUS KEREM ÖZDEMİR", "12", "HAKAN KOCAARİ"],
+                ["REVİR", "MEHMET YILMAZ", "12", "HAKAN KOCAARİ"],
+                ["NÖB. PER. ODASI", "MEHMET YILMAZ", "12", "HAKAN KOCAARİ"],
+                ["HOL", "AHMET FATİH ÖLMEZ", "12", "HAKAN KOCAARİ"],
+                ["BANYOLAR", "BEHLÜL EDİP ÇAKIR", "12", "HAKAN KOCAARİ"],
+                ["TUVALETLER", "MEHMET ENES İNAN", "12", "HAKAN KOCAARİ"],
+                ["MERDİVEN", "AHMET FATİH ÖLMEZ", "12", "HAKAN KOCAARİ"]
+            ]},
+            { kat: "5.KAT", rows: [
+                ["5. KAT 9. SINIF YATAKHANE", "MEHMET EMRE ÜLKER", "9", "ERCAN GÜRÜLTÜOĞLU"],
+                ["10. SINIF YATAKHANE", "HİLMİ ENES BAYRAM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["10. YATAKHANE", "HİLMİ ENES BAYRAM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["11. SINIF YATAKHANE", "SENCER ÇELİKKANAT", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["11. SINIF YATAKHANE", "SENCER ÇELİKKANAT", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["HOL", "AHMET BEDİRHAN ÖZCAN", "11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["TUVALETLER", "AHMET KEREM BAYRAKTAR, AHMET ENES KURU", "11-11", "ERCAN GÜRÜLTÜOĞLU"],
+                ["KURUTMALIK", "YUSUF KEMAL YETİM", "10", "ERCAN GÜRÜLTÜOĞLU"],
+                ["MERDİVEN", "YUSUF KEMAL YETİM", "10", "ERCAN GÜRÜLTÜOĞLU"]
+            ]},
+            { kat: "6.KAT", rows: [
+                ["6. KAT LOKAL", "MEHMET EMRE OKYAY", "10", "AHMET ALİHAN DOĞAN"],
+                ["BİLGİSAYAR ODASI", "KEREM TALHA YILDIRIM", "11", "AHMET ALİHAN DOĞAN"],
+                ["KÜTÜPHANE", "MEHMET HAMZA EREN", "9", "AHMET ALİHAN DOĞAN"],
+                ["HOL", "MEHMET HAMZA EREN", "9", "AHMET ALİHAN DOĞAN"],
+                ["KANTİN", "MUSTAFA EMİR BEKİ", "10", "AHMET ALİHAN DOĞAN"]
+            ]}
+        ];
+
+        function renderSchedule() {
+            const tbody = document.getElementById('scheduleBody'); tbody.innerHTML = '';
+            const now = new Date(); const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            scheduleData.forEach((item) => {
+                const row = document.createElement('tr');
+                const [startH, startM] = item.start.split(':').map(Number);
+                const [endH, endM] = item.end.split(':').map(Number);
+                let startTotal = startH * 60 + startM; let endTotal = endH * 60 + endM;
+                if (endTotal < startTotal) endTotal += 24 * 60;
+                let checkCurrent = currentMinutes;
+                if (checkCurrent < startTotal && item.title === "MECBURİ İSTİRAHAT") checkCurrent += 24 * 60;
+                if (checkCurrent >= startTotal && checkCurrent < endTotal) row.classList.add('active-row');
+                let titleClass = item.type === 'highlight' ? 'highlight-text' : (item.type === 'bold' ? 'bold-text' : '');
+                row.innerHTML = `<td>${item.start}</td><td>${item.end}</td><td class="${titleClass}">${item.title}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderYemek() {
+            const grid = document.getElementById('yemekGrid');
+            let html = '';
+            yemekData.forEach(g => {
+                html += `<div class="yemek-card">
+                    <div class="split-title">${g.group}</div>
+                    <div class="list-item">${g.members[0]}</div>
+                    <div class="list-item">${g.members[1]}</div>
+                    <div class="list-item">${g.members[2]}</div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+
+            const roles = document.getElementById('yemekRolesTable');
+            let rhtml = '<thead><tr><th>GÖREV</th><th>İSİM</th></tr></thead><tbody>';
+            rolesData.forEach(r => { rhtml += `<tr><td class="bold-text">${r.role}</td><td>${r.name}</td></tr>`; });
+            roles.innerHTML = rhtml + '</tbody>';
+        }
+
+        function renderCay() {
+            const list = document.getElementById('cayList'); let html = '';
+            cayData.forEach(name => { html += `<div class="list-item">${name}</div>`; });
+            list.innerHTML = html;
+        }
+
+        function renderKiraat() {
+            document.getElementById('imamBody').innerHTML = imamData.map(i => `<tr><td>${i.sira}</td><td>${i.name}</td><td>${i.sinif}</td></tr>`).join('');
+            document.getElementById('muezzinBody').innerHTML = muezzinData.map(m => `<tr><td>${m.sira}</td><td>${m.name}</td><td>${m.sinif}</td></tr>`).join('');
+        }
+
+        function renderTemizlik() {
+            const tbody = document.getElementById('temizlikBody');
+            let html = '';
+            temizlikData.forEach(k => {
+                html += `<tr><td colspan="4" class="group-header">${k.kat}</td></tr>`;
+                k.rows.forEach(r => {
+                    html += `<tr><td class="bold-text" style="text-align:left; padding-left:10px;">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="bold-text">${r[3]}</td></tr>`;
+                });
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateClock() {
+            document.getElementById('clock1').textContent = new Date().toLocaleTimeString('tr-TR');
+            if (new Date().getSeconds() === 0) renderSchedule();
+        }
+
+        function loadFile(event) {
+            const image = document.getElementById('profileImage');
+            image.src = URL.createObjectURL(event.target.files[0]);
+            const reader = new FileReader();
+            reader.onload = (e) => localStorage.setItem('enderunProfilePic', e.target.result);
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function openScreen(id) {
+            document.getElementById(id).classList.add('active');
+            document.getElementById(id).scrollTop = 0;
+            if(id === 'programScreen') renderSchedule();
+            if(id === 'yemekScreen') renderYemek();
+            if(id === 'cayScreen') renderCay();
+            if(id === 'kiraatScreen') renderKiraat();
+            if(id === 'temizlikScreen') renderTemizlik();
+        }
+
+        function closeScreen(id) { document.getElementById(id).classList.remove('active'); }
+
+        window.onload = () => {
+            const savedPic = localStorage.getItem('enderunProfilePic');
+            if (savedPic) document.getElementById('profileImage').src = savedPic;
+            renderSchedule();
+            renderYemek();
+            renderTemizlik();
+            setInterval(updateClock, 1000);
+            updateClock();
+        };
+    </script>
+</body>
+</html>
