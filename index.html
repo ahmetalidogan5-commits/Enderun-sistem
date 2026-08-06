@@ -61,6 +61,8 @@ tr.active-row { background-color: #e8f4f8 !important; font-weight: 600; color: #
 .highlight-text { color: #e74c3c; font-weight: 700; }
 .bold-text { font-weight: 700; }
 .group-header { background: #ecf0f1; font-weight: 700; text-align: center; padding: 10px; }
+.today-header { background: #d4e6f1; color: #2980b9; }
+.today-row td { background-color: #e8f4f8; font-weight: 600; color: #2980b9; }
 .list-item { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 1.1rem; font-weight: 500; text-align: center; }
 .list-item:last-child { border-bottom: none; }
 .footer-role { padding: 15px; background: #2c3e50; color: white; text-align: center; font-weight: 700; border-radius: 8px; width: 100%; max-width: 1000px; }
@@ -168,7 +170,7 @@ tr.active-row { background-color: #e8f4f8 !important; font-weight: 600; color: #
     </div>
 </div>
 
-<div class="version-badge" id="versionBadge">v2.4</div>
+<div class="version-badge" id="versionBadge">v2.5</div>
 
 <script>
 var scheduleData = [
@@ -210,20 +212,20 @@ var scheduleData = [
     { start: "23:00", end: "00:00", title: "MECBURİ İSTİRAHAT", type: "bold" }
 ];
 var yemekData = [
-    { group: "1.GRUP", members: ["ALİHAN ÖZEN", "MEMHET EMRE ÜLKER", "MEHMET HAMZA EREN"] },
-    { group: "2.GRUP", members: ["AHMET YASİN ŞAHİN", "OSMAN KENAN ÇİMENDAĞ", "HİLMİHAN KIRBIYIK"] },
-    { group: "3.GRUP", members: ["AHMET FURKAN BALARBAN", "AHMET SELİM ERDEM", "YUSUF KEMAL YETİM"] },
-    { group: "4.GRUP", members: ["İSMAİL ÇOMAK", "EYMEN AKİF UYAR", "MUHİTTİN KILIÇ"] },
-    { group: "5.GRUP", members: ["HİLMİ ENES BAYRAM", "MUHAMMED ENES KINCAK", "MUSTAFA EMİR BEKİ"] },
-    { group: "6.GRUP", members: ["MEHMET EMRE OKYAY", "MEHMET TURAN", "YUSUF KEREM ERTAŞ"] },
-    { group: "7.GRUP", members: ["MUHAMMED ENSAR AYDIN", "AHMET BEDİRHAN ÖZCAN", "AHMET ENES KURU"] },
-    { group: "8.GRUP", members: ["AHMET KEREM BAYRAKTAR", "ARİFHAN İNAN", "KEREM YAVUZ YILMAZ"] },
-    { group: "9.GRUP", members: ["ÖMER FARUK CAMBAZ", "YUSUF GÜLCAN", "MEHMET AKİF ÇAKIR"] },
-    { group: "10.GRUP", members: ["İLHAN AHMET ÇAYIR", "TEVFİK TUNA ÇAKMAK", "MEHMET HİLMİ ÇELEN"] },
-    { group: "11.GRUP", members: ["ÖMER YAĞIZ EMSEN", "HÜSEYİN EMİR AKKOÇ", "SENCER ÇELİKKANAT"] },
-    { group: "12.GRUP", members: ["YUNUS KEREM ÖZDEMİR", "MEHMET YILMAZ", "MEHMET ENES İNAN"] },
-    { group: "13.GRUP", members: ["BEHLÜL EDİP ÇAKIR", "OSMAN YEŞİLIRMAK", "AHMET FATİH ÖLMEZ"] },
-    { group: "14.GRUP", members: ["MEHMET SELİM DEMİRCİ", "İBRAHİM YAĞIZ YİĞEN", "EMİN KEREM AKÇAY"] }
+    { group: "1.GRUP", gun: "SALI", members: ["ALİHAN ÖZEN", "MEMHET EMRE ÜLKER", "MEHMET HAMZA EREN"] },
+    { group: "2.GRUP", gun: "ÇARŞAMBA", members: ["AHMET YASİN ŞAHİN", "OSMAN KENAN ÇİMENDAĞ", "HİLMİHAN KIRBIYIK"] },
+    { group: "3.GRUP", gun: "PERŞEMBE", members: ["AHMET FURKAN BALARBAN", "AHMET SELİM ERDEM", "YUSUF KEMAL YETİM"] },
+    { group: "4.GRUP", gun: "CUMA", members: ["İSMAİL ÇOMAK", "EYMEN AKİF UYAR", "MUHİTTİN KILIÇ"] },
+    { group: "5.GRUP", gun: "PAZARTESİ", members: ["HİLMİ ENES BAYRAM", "MUHAMMED ENES KINCAK", "MUSTAFA EMİR BEKİ"] },
+    { group: "6.GRUP", gun: "SALI", members: ["MEHMET EMRE OKYAY", "MEHMET TURAN", "YUSUF KEREM ERTAŞ"] },
+    { group: "7.GRUP", gun: "ÇARŞAMBA", members: ["MUHAMMED ENSAR AYDIN", "AHMET BEDİRHAN ÖZCAN", "AHMET ENES KURU"] },
+    { group: "8.GRUP", gun: "PERŞEMBE", members: ["AHMET KEREM BAYRAKTAR", "ARİFHAN İNAN", "KEREM YAVUZ YILMAZ"] },
+    { group: "9.GRUP", gun: "CUMA", members: ["ÖMER FARUK CAMBAZ", "YUSUF GÜLCAN", "MEHMET AKİF ÇAKIR"] },
+    { group: "10.GRUP", gun: "PAZARTESİ", members: ["İLHAN AHMET ÇAYIR", "TEVFİK TUNA ÇAKMAK", "MEHMET HİLMİ ÇELEN"] },
+    { group: "11.GRUP", gun: "SALI", members: ["ÖMER YAĞIZ EMSEN", "HÜSEYİN EMİR AKKOÇ", "SENCER ÇELİKKANAT"] },
+    { group: "12.GRUP", gun: "ÇARŞAMBA", members: ["YUNUS KEREM ÖZDEMİR", "MEHMET YILMAZ", "MEHMET ENES İNAN"] },
+    { group: "13.GRUP", gun: "PERŞEMBE", members: ["BEHLÜL EDİP ÇAKIR", "OSMAN YEŞİLIRMAK", "AHMET FATİH ÖLMEZ"] },
+    { group: "14.GRUP", gun: "CUMA", members: ["MEHMET SELİM DEMİRCİ", "İBRAHİM YAĞIZ YİĞEN", "EMİN KEREM AKÇAY"] }
 ];
 var rolesData = [
     { role: "BAŞKAN", name: "MEHMET BUĞRAHAN BİNGÖL" },
@@ -359,11 +361,14 @@ function renderSchedule() {
     }
 }
 function renderYemek() {
+    var gunAd = ['PAZAR', 'PAZARTESİ', 'SALI', 'ÇARŞAMBA', 'PERŞEMBE', 'CUMA', 'CUMARTESİ'];
+    var bugun = gunAd[new Date().getDay()];
     var html = '<thead><tr><th colspan="3">GRUPLAR</th></tr><tr><th>1.KİŞİ (SOL)</th><th>2.KİŞİ (ORTA)</th><th>3.KİŞİ (SAĞ)</th></tr></thead><tbody>';
     for (var i = 0; i < yemekData.length; i++) {
         var g = yemekData[i];
-        html += '<tr><td colspan="3" class="group-header">' + g.group + '</td></tr>';
-        html += '<tr><td style="text-align:left; padding-left:12px;">' + g.members[0] + '</td><td>' + g.members[1] + '</td><td style="text-align:right; padding-right:12px;">' + g.members[2] + '</td></tr>';
+        var isToday = (g.gun === bugun);
+        html += '<tr><td colspan="3" class="group-header' + (isToday ? ' today-header' : '') + '">' + g.group + ' - ' + g.gun + (isToday ? ' (BUGÜN)' : '') + '</td></tr>';
+        html += '<tr' + (isToday ? ' class="today-row"' : '') + '><td style="text-align:left; padding-left:12px;">' + g.members[0] + '</td><td>' + g.members[1] + '</td><td style="text-align:right; padding-right:12px;">' + g.members[2] + '</td></tr>';
     }
     html += '<tr><td colspan="3" class="group-header">GÖREVLİLER</td></tr><tr><th>GÖREV</th><th colspan="2">İSİM</th></tr>';
     for (var j = 0; j < rolesData.length; j++) {
@@ -416,7 +421,7 @@ window.onload = function() {
     renderTemizlik();
     setInterval(updateClock, 1000);
     updateClock();
-    document.getElementById('versionBadge').textContent = 'v2.4 ✔';
+    document.getElementById('versionBadge').textContent = 'v2.5 ✔';
 };
 </script>
 </body>
